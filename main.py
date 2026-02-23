@@ -7,46 +7,39 @@ from pathlib import Path
 from flask import Flask, jsonify, request
 
 
-def setup_logger(name: str = "app_logger") -> logging.Logger:
+def setup_logging() -> None:
+    """Конфигурация root-logger для всего приложения."""
+
     log_format = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-5.5s| %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        fmt="%(asctime)s | %(levelname)-5.5s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / "app.log"
 
-    # --- 1. Консольный обработчик ---
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(log_format)
-    console_handler.setLevel(logging.INFO)
 
-    # --- 2. Файловый обработчик ---
     file_handler = RotatingFileHandler(
         log_file,
         maxBytes=10 * 1024 * 1024,
         backupCount=5,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     file_handler.setFormatter(log_format)
-    file_handler.setLevel(logging.INFO)
 
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
 
-    if logger.hasHandlers():
-        logger.handlers.clear()
-
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
-    logger.propagate = False
-
-    return logger
+    root_logger.handlers.clear()
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
 
 
-# Инициализируем
-main_logger = setup_logger()
+setup_logging()
+main_logger = logging.getLogger(__name__)
 
 
 ALLOWED_ACTIONS = {

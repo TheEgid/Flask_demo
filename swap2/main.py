@@ -3,15 +3,20 @@ import time
 
 try:
     from .core.logger import logger
+    from .core.summas import get_summas
 except ImportError:
     # Fallback для прямого запуска файла
     from core.logger import logger
+    from core.summas import get_summas
 
 
 def RUNNER_SECOND(params: dict) -> dict:
     """Основная логика модуля."""
     time.sleep(1)
     logger.info("SWAP2: Start processing...")
+    logger.info(f"SWAP2: {list(params.keys())} | {list(params.values())}")
+    logger.info(get_summas())
+    logger.info("SWAP2: End processing...")
     return {
         "message": "Swap2 finished processing",
         "input_keys": list(params.keys()),
