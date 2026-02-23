@@ -1,11 +1,12 @@
 import concurrent.futures
+import platform
 import statistics
 import time
 
 import pytest
 import requests
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = "http://localhost:5000" if platform.system() == 'Windows' else "http://localhost:80"
 
 
 def make_request(endpoint, params=""):

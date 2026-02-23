@@ -132,30 +132,42 @@ class TestModuleFunctions:
             main.main_logger = original_logger
 
 
+@pytest.fixture
+def project_root():
+    """Возвращает путь к корню проекта."""
+    return Path(__file__).parent.parent
+
+
 class TestCLI:
     """Тесты командной строки модулей."""
 
-    def test_swap1_cli(self, capsys):
+    def test_swap1_cli(self, project_root, monkeypatch):
         """Тест запуска swap1 из командной строки."""
         import subprocess
+
+        monkeypatch.chdir(project_root)
+
         result = subprocess.run(
             [sys.executable, 'swap1/main.py', 'name=CLI', 'count=99'],
             capture_output=True,
             text=True
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, f"Stderr: {result.stderr}"
         assert 'CLI' in result.stdout
         assert '99' in result.stdout
 
-    def test_swap2_cli(self, capsys):
+    def test_swap2_cli(self, project_root, monkeypatch):
         """Тест запуска swap2 из командной строки."""
         import subprocess
+
+        monkeypatch.chdir(project_root)
+
         result = subprocess.run(
             [sys.executable, 'swap2/main.py', 'id=CLI', 'status=testing'],
             capture_output=True,
             text=True
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, f"Stderr: {result.stderr}"
         assert 'finished processing' in result.stdout
         assert 'CLI' in result.stdout
 
