@@ -1,31 +1,51 @@
 import importlib
 import logging
 import sys
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from flask import Flask, jsonify, request
-
-app = Flask(__name__)
 
 
 def setup_logger(name: str = "app_logger") -> logging.Logger:
     log_format = logging.Formatter(
         fmt="%(asctime)s | %(levelname)-5.5s| %(message)s",
-        datefmt="%H:%M:%S"
+        datefmt="%Y-%m-%d %H:%M:%S"
     )
+
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / "app.log"
+
+    # --- 1. Консольный обработчик ---
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(log_format)
     console_handler.setLevel(logging.INFO)
 
+    # --- 2. Файловый обработчик ---
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8"
+    )
+    file_handler.setFormatter(log_format)
+    file_handler.setLevel(logging.INFO)
+
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
-    if not logger.handlers:
-        logger.addHandler(console_handler)
+    if logger.hasHandlers():
+        logger.handlers.clear()
 
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
     logger.propagate = False
+
     return logger
 
 
+# Инициализируем
 main_logger = setup_logger()
 
 
@@ -33,6 +53,9 @@ ALLOWED_ACTIONS = {
     "swap1": "RUNNER_FIRST",
     "swap2": "RUNNER_SECOND"
 }
+
+
+app = Flask(__name__)
 
 
 @app.route('/run/<action>')

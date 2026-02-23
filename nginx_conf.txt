@@ -1,0 +1,13 @@
+server {
+    listen 80;
+    server_name _; # Слушать все запросы по IP или домену
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/opt/Flask_demo/flask_demo.sock;
+    }
+
+    # Логи для отладки
+    access_log /var/log/nginx/flask_demo_access.log;
+    error_log /var/log/nginx/flask_demo_error.log;
+}

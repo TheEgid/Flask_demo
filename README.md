@@ -7,7 +7,7 @@
 Мы будем использовать следующую структуру директорий. Каждая подпапка (`swap1`, `swap2`...) представляет собой отдельный модуль с логикой от сторонних разработчиков.
 
 ```text
-/home/user/myproject/
+/opt/Flask_demo/
 ├── main.py              # Точка входа Flask
 ├── wsgi.py              # Точка входа для Gunicorn
 ├── requirements.txt     # Зависимости
@@ -28,10 +28,9 @@
 
 ## 2. Подготовка сервера (Ubuntu)
 
-Подключитесь к серверу по SSH и выполните обновление системы, установку Python, pip, venv и Nginx.
-
 ```bash
 sudo apt update
+sudo apt update && sudo apt dist-upgrade -y
 sudo apt install -y python3-pip python3-venv nginx
 ```
 
@@ -40,19 +39,20 @@ sudo apt install -y python3-pip python3-venv nginx
 Создайте директорию проекта и виртуальное окружение.
 
 ```bash
-mkdir -p /home/user/myproject
-cd /home/user/myproject
+# mkdir
+# cd
 python3 -m venv venv
+
 source venv/bin/activate
 ```
-
 Установите Flask и Gunicorn:
 
 ```bash
 pip install flask gunicorn
 pip freeze > requirements.txt
+# #
+pip install -r requirements.txt
 ```
-
 
 
 ## 5. Настройка Systemd (Gunicorn)
@@ -60,33 +60,37 @@ pip freeze > requirements.txt
 Создайте сервис для автозапуска приложения.
 
 ```bash
-sudo nano /etc/systemd/system/myproject.service
-```
 
-Вставьте следующее содержимое (замените `user` на ваше имя пользователя):
-
-```ini
 [Unit]
-Description=Gunicorn instance for MyProject
+Description=Gunicorn instance for Flask_demo
 After=network.target
 
 [Service]
 User=user
 Group=www-data
-WorkingDirectory=/home/user/myproject
-Environment="PATH=/home/user/myproject/venv/bin"
-ExecStart=/home/user/myproject/venv/bin/gunicorn --workers 3 --bind unix:/home/user/myproject/myproject.sock wsgi:app
+# Путь к папке проекта
+WorkingDirectory=/opt/Flask_demo
+# Путь к venv внутри проекта
+Environment="PATH=/opt/Flask_demo/venv/bin"
+Environment=LANG=en_US.UTF-8
+Environment=LC_ALL=en_US.UTF-8
+Environment=PYTHONUTF8=1
+# Вызов gunicorn именно из этого venv
+ExecStart=/opt/Flask_demo/venv/bin/gunicorn --workers 3 --bind unix:flask_demo.sock wsgi:app
 
 [Install]
 WantedBy=multi-user.target
+
 ```
 
 Запустите и включите сервис:
 
 ```bash
-sudo systemctl start myproject
-sudo systemctl enable myproject
-sudo systemctl status myproject
+sudo systemctl start Flask_demo
+sudo systemctl enable Flask_demo
+sudo systemctl status Flask_demo
+
+sudo systemctl stop Flask_demo
 ```
 
 ## 6. Настройка Nginx
@@ -96,38 +100,24 @@ sudo systemctl status myproject
 Создайте конфигурацию сайта:
 
 ```bash
-sudo nano /etc/nginx/sites-available/myproject
+sudo nano /etc/nginx/sites-available/Flask_demo
 ```
 
 Вставьте конфиг:
 
 ```nginx
-server {
-    listen 80;
-    server_name your_domain_or_IP;
 
-    # Логи
-    access_log /var/log/nginx/myproject_access.log;
-    error_log /var/log/nginx/myproject_error.log;
 
-    # Статические файлы (если будут)
-    location /static/ {
-        alias /home/user/myproject/static/;
-    }
-
-    # Проксирование запросов к Gunicorn
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/user/myproject/myproject.sock;
-    }
-}
 ```
 
 Активируйте сайт и перезапустите Nginx:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/Flask_demo /etc/nginx/sites-enabled/
 sudo nginx -t
+sudo systemctl restart nginx
+
+sudo rm /etc/nginx/sites-enabled/default
 sudo systemctl restart nginx
 ```
 
@@ -147,8 +137,7 @@ sudo chmod 710 /home/user
 Теперь ваше приложение доступно извне. Попробуйте сделать запрос через браузер или `curl` с внешнего IP:
 
 ```bash
-curl http://ваш_ip_сервера/run/swap1/name=Test,count=5
+ curl 'http://192.168.1.83/run/swap1?name=Test'
 ```
 
 Если вы увидите JSON-ответ, значит, Flask успешно передал параметры в скрипт `swap1/main.py`, и Nginx вернул результат.
-
