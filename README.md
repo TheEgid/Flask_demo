@@ -161,4 +161,8 @@ Invoke-RestMethod -Uri "http://192.168.1.83/run/swap2"
 
 # Запуск всех тестов
 
+
+python -m main
+
+
 pytest tests/ -v
