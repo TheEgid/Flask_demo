@@ -1,6 +1,7 @@
 import sys
 
-def RUNNER_FIRST(params):
+
+def RUNNER_FIRST(params: dict) -> dict:
     """
     Эта функция вызывается Flask.
     params -- словарь с параметрами из URL.
@@ -14,6 +15,7 @@ def RUNNER_FIRST(params):
         "message": f"Swap1 executed for {name} with count {count}",
         "received_params": params
     }
+
 
 # Этот блок выполняется ТОЛЬКО при прямом запуске:
 # python swap1/main.py key=value ...

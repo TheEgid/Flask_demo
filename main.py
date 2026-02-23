@@ -1,50 +1,78 @@
-from flask import Flask, jsonify # pyright: ignore[reportMissingImports]
 import importlib
+import logging
+import sys
+
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Функция для парсинга строки параметров "key=val,key2=val2"
-def parse_value_string(value_str):
-    params = {}
-    if not value_str:
-        return params
-    # Разбиваем строку по запятым
-    pairs = value_str.split(',')
-    for pair in pairs:
-        if '=' in pair:
-            key, val = pair.split('=', 1)
-            params[key.strip()] = val.strip()
-    return params
 
-@app.route('/run/<action>/<path:value>')
-def run_action(action, value):
-    # Безопасность: проверяем имя модуля (только буквы/цифры, чтобы не вышли из директории)
-    if not action.isalnum():
-        return jsonify({"error": "Invalid module name"}), 400
+def setup_logger(name: str = "app_logger") -> logging.Logger:
+    log_format = logging.Formatter(
+        fmt="%(asctime)s | %(levelname)-5.5s| %(message)s",
+        datefmt="%H:%M:%S"
+    )
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_format)
+    console_handler.setLevel(logging.INFO)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    if not logger.handlers:
+        logger.addHandler(console_handler)
+
+    logger.propagate = False
+    return logger
+
+
+main_logger = setup_logger()
+
+
+ALLOWED_ACTIONS = {
+    "swap1": "RUNNER_FIRST",
+    "swap2": "RUNNER_SECOND"
+}
+
+
+@app.route('/run/<action>')
+def run_action(action: str) -> jsonify:
+    # Логируем начало запроса
+    main_logger.info(f"Запрос на действие: {action} | IP: {request.remote_addr}")
+
+    func_name = ALLOWED_ACTIONS.get(action)
+    if not func_name:
+        main_logger.warning(f"Попытка доступа к запрещенному или отсутствующему действию: {action}")
+        return jsonify({"error": f"Action '{action}' is not allowed"}), 403
+
+    params = request.args.to_dict()
+    main_logger.info(f"Параметры запроса: {params}")
 
     module_name = f"{action}.main"
 
     try:
-        # Динамический импорт модуля (например, swap1.main)
         mod = importlib.import_module(module_name)
-    except ImportError as e:  # noqa: F841
-        return jsonify({"error": f"Module '{action}' not found"}), 404
 
-    # Преобразуем параметры в словарь
-    params = parse_value_string(value)
+        if hasattr(mod, func_name):
+            runner_func = getattr(mod, func_name)
 
-    # Проверяем наличие точки входа 'run' в импортированном модуле
-    if hasattr(mod, 'run'):
-        try:
-            # Вызываем функцию run(params) из модуля
-            result = mod.run(params)
+            main_logger.info(f"Запуск функции {func_name} из модуля {module_name}...")
+            result = runner_func(params)
+
+            main_logger.info(f"Действие {action} успешно завершено.")
             return jsonify({"status": "success", "data": result})
-        except Exception as e:
-            return jsonify({"error": f"Execution error: {str(e)}"}), 500
-    else:
-        return jsonify({"error": f"Module '{action}' does not have a 'run' function"}), 500
+
+        else:
+            main_logger.error(f"В модуле {module_name} отсутствует функция {func_name}")
+            return jsonify({"error": "Entry point missing"}), 500
+
+    except ImportError:
+        main_logger.error(f"Не удалось импортировать модуль {module_name}")
+        return jsonify({"error": "Module not found"}), 404
+    except Exception as e:
+        main_logger.exception(f"Критическая ошибка при выполнении {action}: {e!s}")
+        return jsonify({"error": "Internal execution error"}), 500
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
-
-# C:\PLAYGROUND\demo-coopii/venv/Scripts/Activate.ps1
+    app.run(host='0.0.0.0', port=5000)

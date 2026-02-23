@@ -1,14 +1,16 @@
 import sys
 import time
 
-def RUNNER_SECOND(params):
+
+def RUNNER_SECOND(params: dict) -> dict:
     """Основная логика модуля."""
-    time.sleep(1) # Имитация долгой работы
+    time.sleep(1)  # Имитация долгой работы
     return {
         "message": "Swap2 finished processing",
         "input_keys": list(params.keys()),
         "input_values": list(params.values())
     }
+
 
 # Этот код выполнится только при прямом запуске файла
 if __name__ == '__main__':
