@@ -141,3 +141,24 @@ sudo chmod 710 /home/user
 ```
 
 Если вы увидите JSON-ответ, значит, Flask успешно передал параметры в скрипт `swap1/main.py`, и Nginx вернул результат.
+
+
+# Базовый запрос
+Invoke-RestMethod -Uri "http://192.168.1.83/run/swap1?name=Ivan&count=5"
+
+# Без параметров
+Invoke-RestMethod -Uri "http://192.168.1.83/run/swap1"
+
+# Несколько параметров
+Invoke-RestMethod -Uri "http://192.168.1.83/run/swap1?name=Alice&count=10&extra=info"
+
+# Базовый запрос
+Invoke-RestMethod -Uri "http://192.168.1.83/run/swap2?id=123&status=active"
+
+# Проверка задержки (1 секунда)
+Invoke-RestMethod -Uri "http://192.168.1.83/run/swap2"
+
+
+# Запуск всех тестов
+
+pytest tests/ -v

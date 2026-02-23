@@ -18,7 +18,7 @@ extend-select = [
     "TCH",   # type-checking imports
     "ARG",   # unused arguments
     "PTH",   # pathlib
-    "PD",   # pandas
+    "PD",    # pandas
     "RUF",   # ruff-native rules
 ]
 
@@ -26,7 +26,7 @@ ignore = [
     "B008",     # function calls in defaults
     "TC002",    # type-checking imports
     "TC003",    # type-checking imports
-    "ERA",      # commented-out code (если используется плагин flake8-erase)
+    "ERA",      # commented-out code
     "RUF001",   # ambiguous unicode (strings)
     "RUF002",   # ambiguous unicode (docstrings)
     "RUF003",   # ambiguous unicode (comments)
@@ -36,13 +36,18 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"tests/*" = ["ARG"]
+# Отключение правил для тестов
+"tests/*" = [
+    "ARG",      # unused arguments (pytest fixtures)
+    "ANN",      # type annotations (необязательны в тестах)
+    "B011",     # assert False
+    "S",        # security (не критично в тестах)
+]
 "*/migrations/*" = ["ALL"]
 
-# Правильная секция для настроек сортировки импортов в ruff.toml
 [lint.isort]
 combine-as-imports = true
-known-first-party = ["src"] # Укажите здесь вашу корневую папку с кодом
+known-first-party = ["src"]
 split-on-trailing-comma = true
 
 [lint.pylint]
