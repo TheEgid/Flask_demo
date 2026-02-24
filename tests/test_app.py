@@ -117,9 +117,9 @@ class TestModuleFunctions:
         """Тест что запросы логируются."""
 
         # Подменяем логгер на мок
-        original_logger = main.main_logger
+        original_logger = main.logger
         mock_logger = MagicMock()
-        main.main_logger = mock_logger
+        main.logger = mock_logger
 
         try:
             client.get('/run/swap1?name=LogTest')
@@ -129,7 +129,7 @@ class TestModuleFunctions:
             assert any('swap1' in str(call) for call in info_calls)
             assert any('LogTest' in str(call) for call in info_calls)
         finally:
-            main.main_logger = original_logger
+            main.logger = original_logger
 
 
 @pytest.fixture

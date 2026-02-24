@@ -1,13 +1,14 @@
+import logging
 import sys
 import time
 
 try:
-    from .core.logger import logger
     from .core.summas import get_summas
 except ImportError:
     # Fallback для прямого запуска файла
-    from core.logger import logger
     from core.summas import get_summas
+
+logger = logging.getLogger("app." + __name__)
 
 
 def RUNNER_SECOND(params: dict) -> dict:
