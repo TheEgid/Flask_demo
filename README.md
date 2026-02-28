@@ -107,7 +107,6 @@ sudo nano /etc/nginx/sites-available/Flask_demo
 
 ```nginx
 
-
 ```
 
 Активируйте сайт и перезапустите Nginx:
@@ -142,6 +141,35 @@ sudo chmod 710 /home/user
 
 Если вы увидите JSON-ответ, значит, Flask успешно передал параметры в скрипт `swap1/main.py`, и Nginx вернул результат.
 
+## Отключение -
+
+```bash
+
+# Остановить сервис прямо сейчас
+
+sudo systemctl stop Flask_demo
+
+# Отключить автозапуск при старте системы
+
+sudo systemctl disable Flask_demo
+
+# Проверить статус
+
+sudo systemctl status Flask_demo
+
+# Остановить Nginx
+
+sudo systemctl stop nginx
+
+# Отключить автозапуск
+
+sudo systemctl disable nginx
+
+# Проверить статус
+
+sudo systemctl status nginx
+
+```
 
 # Базовый запрос
 Invoke-RestMethod -Uri "http://192.168.1.83/run/swap1?name=Ivan&count=5"
